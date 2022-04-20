@@ -1,0 +1,165 @@
+resource "azurerm_virtual_network" "n01506347assignment1-vnet" {
+  name                = var.vnet_name
+  address_space       = var.vnet_add_space
+  location            = var.location
+  resource_group_name = var.rg_name
+
+  tags = var.tags
+
+}
+
+resource "azurerm_subnet" "n01506347assignment1-subnet" {
+  name                 = var.subnet_name
+  resource_group_name  = var.rg_name
+  virtual_network_name = azurerm_virtual_network.n01506347assignment1-vnet.name
+  address_prefixes     = var.subnet_add_space
+}
+
+resource "azurerm_network_security_group" "n01506347assignment1-nsg" {
+  name                = var.nsg_name
+  location            = var.location
+  resource_group_name = var.rg_name
+
+  security_rule {
+    name                       = "rule1"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = 22
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  security_rule {
+    name                       = "rule2"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = 3389
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+     source_address_prefix      = "*"
+    destination_address_prefix = "*"
+
+  }
+
+  security_rule {
+    name                       = "HTTP"
+    priority                   = 102
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = 5985
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+
+  tags = var.tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "assignment1-nsga" {
+  subnet_id                 = azurerm_subnet.n01506347assignment1-subnet.id
+  network_security_group_id = azurerm_network_security_group.n01506347assignment1-nsg.id
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+resource "azurerm_virtual_network" "vnet" {
+  name                = var.vnet
+  location            = var.location
+  resource_group_name = var.resource_group
+  address_space       = var.vnet_addr_space
+}
+
+resource "azurerm_subnet" "subnet" {
+  name                 = var.subnet
+  resource_group_name  = var.resource_group
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = var.subnet_space
+}
+
+resource "azurerm_network_security_group" "nsg" {
+  name                = var.nsg
+  location            = var.location
+  resource_group_name = var.resource_group
+
+  security_rule {
+    name                       = "rule1"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "subnet_association" {
+  subnet_id                 = azurerm_subnet.subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+resource "azurerm_subnet" "subnet2" {
+  name                 = var.subnet2
+  resource_group_name  = var.resource_group
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = var.subnet_space2
+}
+resource "azurerm_network_security_group" "nsg2" {
+  name                = var.nsg2
+  location            = var.location
+  resource_group_name = var.resource_group
+
+  security_rule {
+    name                       = "rule1"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "rule2"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "5985"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "subnet_association2" {
+  subnet_id                 = azurerm_subnet.subnet2.id
+  network_security_group_id = azurerm_network_security_group.nsg2.id
+}

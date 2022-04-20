@@ -1,0 +1,115 @@
+module "network" {
+  source           = "./modules/network"
+  rg_name          = module.rgroup.rg_name
+  location         = module.rgroup.location_name
+  vnet_name        = "n01506347assignment1-vnet"
+  vnet_add_space   = ["10.0.0.0/16"]
+  subnet_name      = "n01506347assignment1-subnet"
+  subnet_add_space = ["10.0.1.0/24"]
+  nsg_name         = "n01506347assignment1-nsg"
+  tags             = local.common_tags
+  depends_on = [
+    module.rgroup
+  ]
+}
+
+module "vmlinux" {
+  source = "./modules/vmlinux"
+  # vm_name = "n01506347assignment1-linux"
+  linux_avset = "linux-avs"
+  linux_name = {
+    "linux01" = "Standard_B1ms"
+    "linux02" = "Standard_B1ms"
+  }
+  # nb_count = 2
+  location            = module.rgroup.location_name
+  rg_name             = module.rgroup.rg_name
+  subnet_id           = module.network.subnet_id
+  storage_account_uri = module.common.storage_account_uri
+  tags                = local.common_tags
+  depends_on = [
+    module.rgroup,
+    module.network,
+  ]
+}
+
+module "vmwindows" {
+  source              = "./modules/vmwindows"
+  windows_name        = "winvm1"
+  windows_avset       = "windows-avs"
+  location            = module.rgroup.location_name
+  rg_name             = module.rgroup.rg_name
+  subnet_id           = module.network.subnet_id
+  storage_account_uri = module.common.storage_account_uri
+   tags                = local.common_tags
+  depends_on = [
+    module.rgroup,
+    module.network
+  ]
+}
+
+module "rgroup" {
+  source   = "./modules/rgroup"
+  location = "canadacentral"
+  rg_name  = "n01506347assignment1-rg"
+  tags     = local.common_tags
+}
+
+module "datadisk" {
+  source     = "./modules/datadisk"
+  location   = module.rgroup.location_name
+  rg_name    = "n01506347assignment1-rg"
+  linux_name = module.vmlinux.linux_vm_hostname
+  linux_id   = module.vmlinux.linux_vm_id
+  win_datadisk3_name = "n01506347assignment1-datadisk3-win"
+  windows_id = module.vmwindows.Windows_VM_Id
+  tags       = local.common_tags
+  depends_on = [
+    module.vmwindows,
+    module.vmlinux
+  ]
+}
+
+module "loadbalancer" {
+  source            = "./modules/loadbalancer"
+  lb_name           = "n01506347assignment1-lb"
+  public_ip_lb_name = "n01506347assignment1-publicip-lb"
+  location          = module.rgroup.location_name
+  rg_name           = module.rgroup.rg_name
+  subnet_id         = module.network.subnet_id
+  linux_nic         = module.vmlinux.linux_nic
+  windows_nic       = module.vmwindows.Windows_vm_nic
+    tags              = local.common_tags
+  depends_on = [
+    module.vmlinux,
+    module.vmwindows
+  ]
+
+}
+
+module "common" {
+  source                       = "./modules/common"
+  recovery_service_vault_name  = "n01506347assignment1-vault"
+  log_analytics_workspace_name = "n01506347assignment1-loganalytics-workspace"
+  storage_account_name         = "storage6347"
+  location                     = module.rgroup.location_name
+  rg_name                      = module.rgroup.rg_name
+  tags                         = local.common_tags
+  depends_on = [
+    module.rgroup,
+  ]
+
+}
+
+module "database" {
+  source         = "./modules/database"
+  db_server_name = "n01506347assignment1-postgre-server"
+  db_name        = "n01506347assignment1-postgre_server-db"
+  location       = module.rgroup.location_name
+  rg_name        = module.rgroup.rg_name
+  tags           = local.common_tags
+  depends_on = [
+    module.loadbalancer
+  ]
+
+}
